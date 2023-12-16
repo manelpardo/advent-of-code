@@ -1,10 +1,12 @@
 import pandas as pd
+import re
+from pathlib import Path
 
-# Replace 'your_file.txt' with the actual file path
-file_path = 'day_1_data.txt'
+BASE_DIR = Path(__file__).parent
+FILE_PATH = BASE_DIR / 'day_1_data.txt'
 
 # Read the text file into a DataFrame
-df = pd.read_csv(file_path, delimiter='\t', header=None)
+df = pd.read_csv(FILE_PATH, delimiter='\t', header=None)
 
 df.columns = ['text']
 
@@ -21,7 +23,7 @@ df = (
     })
 )
 
-print(df)
+print(df.head(10))
 print(df.shape)
 print('Part 1. the sum of all of the calibration values is:')
 print(df['combination'].astype('int64').sum())
@@ -44,15 +46,22 @@ keymap = {
 df = (
     df
     .assign(**{
-        'text_modified': lambda x: x['text'].replace(keymap, regex=True),
-        'digits': lambda x: x['text_modified'].str.extractall(r'(\d)').unstack().fillna('').sum(axis=1),
+        'digits': lambda x: (
+            x['text']
+            .str
+            .extractall(r'(?=(\d|one|two|three|four|five|six|seven|eight|nine))')
+            .unstack()
+            .fillna('')
+            .replace(keymap)
+            .sum(axis=1)
+        ),
         'first_digit': lambda x: x['digits'].str[0],
         'last_digit': lambda x: x['digits'].str[-1],
         'combination': lambda x: x['first_digit'] + x['last_digit'],
     })
 )
 
-print(df)
+print(df.head(10))
 print(df.shape)
 print('Part 2. the sum of all of the calibration values is:')
 print(df['combination'].astype('int64').sum())
